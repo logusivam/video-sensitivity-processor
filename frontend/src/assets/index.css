@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensuring the base body color matches your enterprise UI 
+  specifically the bg-[#FAFAFA] from your original AuthLayout 
+*/
+body {
+  margin: 0;
+  background-color: #FAFAFA; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
