@@ -184,3 +184,22 @@ export const resetPassword = async (req, res) => {
     res.status(400).json({ message: 'Link expired or invalid. Please request a new one.' });
   }
 };
+
+// 5. Get Current User (/me)
+export const getMe = async (req, res) => {
+  // req.user is already securely fetched by the requireAuth middleware
+  if (!req.user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  res.status(200).json({
+    user: {
+      id: req.user._id,
+      name: req.user.fullName,
+      email: req.user.email,
+      role: req.user.role,
+      organization: req.user.organizationId?.name,
+      organizationId: req.user.organizationId?._id
+    }
+  });
+};

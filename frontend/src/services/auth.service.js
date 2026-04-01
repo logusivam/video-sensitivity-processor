@@ -14,6 +14,11 @@ export const authService = {
     const response = await apiClient.post(ENDPOINTS.auth.login, credentials);
     return response.data;
   },
+  getMe: async () => {
+    // Fetches the user data using the HTTP-only cookie securely
+    const response = await apiClient.get('/auth/me');
+    return response.data;
+  },
   // --- Password Reset Methods ---
   requestReset: async (email) => {
     const response = await apiClient.post('/auth/request-reset', { email });

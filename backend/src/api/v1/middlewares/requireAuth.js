@@ -1,12 +1,13 @@
 import jwt from 'jsonwebtoken';
 import { PUBLIC_KEY } from '../../../config/keys.js';
 import User from '../../../models/User.js';
-import { RevokedToken } from '../../../models/Session.js';
 
 export const requireAuth = async (req, res, next) => {
-    let token;
+    // 📌 Look for the token in the HTTP-Only cookie first!
+    let token = req.cookies?.token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // Fallback for non-browser clients (like Postman or mobile apps)
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
 
@@ -18,14 +19,8 @@ export const requireAuth = async (req, res, next) => {
         // 1. Verify token signature and expiration using RS256 Public Key
         const decoded = jwt.verify(token, PUBLIC_KEY, { algorithms: ['RS256'] });
 
-        // 2. Check if token is explicitly blacklisted (revoked)
-        const isRevoked = await RevokedToken.exists({ _id: decoded.jti });
-        if (isRevoked) {
-            return res.status(401).json({ message: 'Session expired or revoked. Please log in again.' });
-        }
-
-        // 3. Attach user to request
-        req.user = await User.findById(decoded.sub).select('-passwordHash');
+        // 2. Attach user to request (populate org so we have the name)
+        req.user = await User.findById(decoded.sub).populate('organizationId').select('-passwordHash');
         
         if (!req.user) {
             return res.status(401).json({ message: 'User no longer exists.' });
