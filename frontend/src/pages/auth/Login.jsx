@@ -100,7 +100,7 @@ export const Login = () => {
         </div>
       </div>
 
-      <Button type="submit" isLoading={isLoading}>
+      <Button type="submit" isLoading={isLoading} className="w-full">
         Sign In
       </Button>
 

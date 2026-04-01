@@ -49,7 +49,7 @@ export const ForgotPassword = () => {
             required
           />
           <div className="pt-2 space-y-3">
-            <Button type="submit" isLoading={isLoading}>
+            <Button type="submit" isLoading={isLoading} className="w-full">
               Send Reset Link
             </Button>
             <Button variant="secondary" type="button" onClick={() => navigate('/login')}>

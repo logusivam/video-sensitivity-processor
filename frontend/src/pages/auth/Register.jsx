@@ -161,7 +161,7 @@ export const Register = () => {
         </div>
 
         <div className="pt-2">
-          <Button type="submit" isLoading={isLoading && !successMessage}>
+          <Button type="submit" isLoading={isLoading && !successMessage} className="w-full">
             Create Account
           </Button>
         </div>
