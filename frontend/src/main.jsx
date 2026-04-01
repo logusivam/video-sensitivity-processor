@@ -2,12 +2,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-
-// EXACTLY LIKE THIS:
-import './assets/index.css'; 
+import './assets/index.css'; // Ensure Tailwind directives are in this file
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

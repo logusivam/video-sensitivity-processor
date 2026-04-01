@@ -28,8 +28,8 @@ export const InputField = ({ label, error, type, icon: Icon, isPassword, showPas
       )}
     </div>
     {error && (
-      <p className={`mt-1.5 text-xs flex items-center ${error.includes('available') ? 'text-green-600' : 'text-red-500'}`}>
-        {!error.includes('available') && <AlertCircle size={12} className="mr-1" />}
+      <p className="mt-1.5 text-xs text-red-500 flex items-center">
+        <AlertCircle size={12} className="mr-1" />
         {error}
       </p>
     )}

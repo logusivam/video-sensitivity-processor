@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI, {
-            // Modern Mongoose defaults to optimal settings, but we explicitly set these for clarity
-            serverSelectionTimeoutMS: 5000, 
+            serverSelectionTimeoutMS: 5000,
+            family: 4, // 📌 THIS IS THE MAGIC FIX FOR NODE 24
         });
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {

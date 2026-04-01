@@ -1,12 +1,11 @@
+import dns from 'node:dns';
+// Force Node 24 to resolve DNS using IPv4 to bypass the ECONNREFUSED error
+dns.setDefaultResultOrder('ipv4first');
 import http from 'http';
 import app from './app.js';
 import connectDB from './config/db.js';
 import { initSocket } from './config/socket.js';
-import dotenv from 'dotenv';
-
-// Load env vars
-dotenv.config();
-
+ 
 const PORT = process.env.PORT || 5000;
 
 // Create HTTP Server
