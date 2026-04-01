@@ -12,12 +12,20 @@ export const authService = {
   },
   login: async (credentials) => {
     const response = await apiClient.post(ENDPOINTS.auth.login, credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
     return response.data;
   },
-  logout: () => {
-    localStorage.removeItem('token');
+  // --- Password Reset Methods ---
+  requestReset: async (email) => {
+    const response = await apiClient.post('/auth/request-reset', { email });
+    return response.data;
+  },
+  completeReset: async (data) => {
+    // data should contain { token, newPassword }
+    const response = await apiClient.post('/auth/reset-password', data);
+    return response.data;
+  },
+  logout: async () => {
+    // Backend should clear the cookie on this call
+    return await apiClient.post('/auth/logout');
   }
 };

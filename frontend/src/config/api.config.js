@@ -9,6 +9,9 @@ export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
     register: '/auth/register',
-    validateOrg: '/auth/validate-org',
+    validateOrg: '/auth/validate-org',    
+    requestReset: '/auth/request-reset', // Added
+    completeReset: '/auth/reset-password', // Added
+    logout: '/auth/logout' // Added
   }
 };

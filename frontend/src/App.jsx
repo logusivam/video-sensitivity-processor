@@ -1,20 +1,26 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthLayout from './pages/auth/AuthLayout';
+import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
+import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword'; // 📌 New Import
 
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
-        {/* The AuthLayout provides the background, logo, and white box */}
         <Route element={<AuthLayout />}>
-          {/* The Register page is injected inside the white box */}
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
-
-        {/* Redirect any unknown route to register for now */}
-        <Route path="*" element={<Navigate to="/register" replace />} />
+        
+        {/* Reset Password (Outside AuthLayout as it has its own shell) */}
+        <Route path="/reset-password" element={<ResetPassword />} />
+        
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/dashboard" element={<div className="p-10">Dashboard Protected Area</div>} />
       </Routes>
     </BrowserRouter>
   );

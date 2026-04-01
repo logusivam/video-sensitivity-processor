@@ -4,7 +4,8 @@ import User from '../../../models/User.js';
 import Organization from '../../../models/Organization.js';
 import { Session } from '../../../models/Session.js'; // Fixed: separated imports
 import { RevokedToken } from '../../../models/RevokedToken.js';
-import { PRIVATE_KEY } from '../../../config/keys.js'; // Fixed: using decoded key
+import { PRIVATE_KEY, PUBLIC_KEY } from '../../../config/keys.js'; // Fixed: using decoded key
+import { sendResetEmail } from '../../../services/email.service.js';
 
 // 1. Validate Organization (Debounced Check)
 export const validateOrganization = async (req, res) => {
@@ -47,50 +48,139 @@ export const register = async (req, res) => {
 // 3. Login
 export const login = async (req, res) => {
   const { email, password, rememberMe } = req.body;
-  const ipAddress = req.ip || req.connection.remoteAddress;
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(401).json({ message: 'Invalid credentials.' });
+  try {
+    const user = await User.findOne({ email }).populate('organizationId');
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
 
-  // Check 6-month inactivity rule
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  
-  if (user.lastLoginAt && user.lastLoginAt < sixMonthsAgo) {
-    user.isActive = false;
+    // Security Check: Inactivity (6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    if (user.lastLoginAt && user.lastLoginAt < sixMonthsAgo) {
+      user.isActive = false;
+      await user.save();
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ 
+        message: 'Account inactive due to prolonged inactivity. Please reset your password to reactivate.' 
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Update login timestamp
+    user.lastLoginAt = new Date();
     await user.save();
-  }
 
-  if (!user.isActive) {
-    return res.status(403).json({ 
-      message: 'Account inactive due to 6 months of inactivity. Please use Forgot Password to reset and reactivate.' 
+    // Generate RS256 JWT
+    const expiresIn = rememberMe ? '7d' : '1d';
+    const token = jwt.sign(
+      { sub: user._id, role: user.role, org: user.organizationId?.slug },
+      PRIVATE_KEY,
+      { algorithm: 'RS256', expiresIn }
+    );
+
+    // Create Session
+    const sessionDurationDays = rememberMe ? 7 : 1;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + sessionDurationDays);
+
+    await Session.create({
+      userId: user._id,
+      refreshTokenHash: 'N/A', 
+      ipAddress,
+      expiresAt,
     });
+
+    // 📌 Set HTTP-Only Cookie
+    res.cookie('token', token, {
+      httpOnly: true,                               // Prevents JS access (XSS protection)
+      secure: process.env.NODE_ENV === 'production', // Use HTTPS only in production
+      sameSite: 'strict',                           // Prevents CSRF
+      maxAge: sessionDurationDays * 24 * 60 * 60 * 1000 // Convert days to milliseconds
+    });
+
+    // We no longer send the 'token' in the JSON body
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        name: user.fullName,
+        role: user.role,
+        organization: user.organizationId?.name
+      }
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ message: 'Server error during login' });
   }
+};
 
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
-  if (!isMatch) return res.status(401).json({ message: 'Invalid credentials.' });
-
-  user.lastLoginAt = new Date();
-  await user.save();
-
-  // JWT Generation (RS256)
-  const expiresIn = rememberMe ? '7d' : '1d';
-  const token = jwt.sign(
-    { sub: user._id, role: user.role, org: user.organizationId }, 
-    PRIVATE_KEY, 
-    { algorithm: 'RS256', expiresIn }
-  );
-
-  // Store Session
-  const expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + (rememberMe ? 7 : 1));
-  
-  await Session.create({
-    userId: user._id,
-    refreshTokenHash: 'hashed_refresh_token_here', // Implement refresh token strategy later
-    ipAddress,
-    expiresAt: expirationDate
+// 4. Logout (To clear the cookie)
+export const logout = (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
   });
+  res.status(200).json({ message: 'Logged out successfully' });
+};
 
-  res.status(200).json({ token, message: 'Login successful' });
+export const requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    
+    // Security Best Practice: Don't reveal if email exists, but log it for your dev
+    if (!user) {
+      console.log(`Reset attempt for non-existent email: ${email}`);
+      return res.status(200).json({ message: 'If an account exists, a link has been sent.' });
+    }
+
+    console.log(`✅ Generating reset token for: ${email}`);
+
+    const resetToken = jwt.sign(
+      { sub: user._id, org: user.organizationId },
+      PRIVATE_KEY,
+      { algorithm: 'RS256', expiresIn: '5m' }
+    );
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    
+    // Await the email service
+    await sendResetEmail(email, resetLink);
+    console.log(`📧 Email sent successfully to: ${email}`);
+
+    res.status(200).json({ message: 'Reset link sent successfully.' });
+  } catch (error) {
+    console.error('❌ Reset Request Error:', error);
+    res.status(500).json({ message: 'Error sending reset email.' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, PUBLIC_KEY, { algorithms: ['RS256'] });
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    
+    // Update user, also ensure isActive is true (reactivation policy)
+    await User.findByIdAndUpdate(decoded.sub, {
+      passwordHash: hashedPassword,
+      isActive: true
+    });
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(400).json({ message: 'Link expired or invalid. Please request a new one.' });
+  }
 };
