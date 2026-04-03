@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, Video, Loader2, FolderKanban, Play, Clock, MoreVertical, Upload } from 'lucide-react';
+import { Menu, X, Video, Loader2, FolderKanban, Play, Clock, MoreVertical, Upload, Trash2 } from 'lucide-react';
 import { Sidebar } from '../../components/dashboard/Sidebar';
 import { InviteModal } from '../../components/dashboard/InviteModal';
 import { UploadArea } from '../../components/dashboard/UploadArea';
@@ -20,23 +20,20 @@ export const Dashboard = () => {
   const [videos, setVideos] = useState([]);
   const [processingJobs, setProcessingJobs] = useState({}); 
   
-  // Playback State
-  const [activeVideo, setActiveVideo] = useState(null); // Data for the popover
-  
-  // Layout State
+  // UI State
   const [activeTab, setActiveTab] = useState('my-uploads');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUploadArea, setShowUploadArea] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null); // For the 3-dot menu
 
-  // 1. Fetch User Data
   useEffect(() => {
     authService.getMe()
       .then(data => setUser(data.user))
       .catch(() => navigate('/login'));
   }, [navigate]);
 
-  // 2. Fetch Videos (Filtered by active tab)
   const fetchVideos = async () => {
     try {
       const data = activeTab === 'my-uploads' 
@@ -52,20 +49,13 @@ export const Dashboard = () => {
     if (user) fetchVideos();
   }, [user, activeTab]);
 
-  // 3. Socket.io Real-Time Pipeline
   useEffect(() => {
     if (!user) return;
-    
     const socket = io(API_CONFIG.BASE_URL, { withCredentials: true });
-
-    // Join organization-specific room for security
     socket.emit('join_org_room', user.organizationId);
 
     socket.on('processing_progress', (data) => {
-      setProcessingJobs(prev => ({
-        ...prev,
-        [data.videoId]: data
-      }));
+      setProcessingJobs(prev => ({ ...prev, [data.videoId]: data }));
     });
 
     socket.on('processing_completed', (data) => {
@@ -74,20 +64,35 @@ export const Dashboard = () => {
         delete newJobs[data.videoId];
         return newJobs;
       });
-      fetchVideos(); // Refresh the grid to show the new video
+      fetchVideos();
     });
 
     return () => socket.disconnect();
   }, [user]);
 
-  // 4. Playback Handler
+  // Handle outside click for dropdown
+  useEffect(() => {
+    const handleClickOutside = () => setOpenDropdownId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const handlePlayVideo = async (videoId) => {
     try {
       const data = await videoService.getPlayUrl(videoId);
-      setActiveVideo(data); // This opens the VideoPlayerPopover
+      setActiveVideo(data);
     } catch (err) {
-      const msg = err.response?.data?.message || "Playback failed";
-      alert(msg);
+      alert(err.response?.data?.message || "Playback failed");
+    }
+  };
+
+  const handleDeleteVideo = async (videoId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this video?")) return;
+    try {
+      await videoService.deleteVideo(videoId);
+      fetchVideos();
+    } catch (err) {
+      alert(err.response?.data?.message || "Delete failed");
     }
   };
 
@@ -97,23 +102,15 @@ export const Dashboard = () => {
     <div className="min-h-screen bg-white font-sans text-slate-900 flex">
       <Sidebar 
         user={user}
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        isMobileMenuOpen={isMobileMenuOpen} 
-        setIsMobileMenuOpen={setIsMobileMenuOpen} 
+        activeTab={activeTab} setActiveTab={setActiveTab} 
+        isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} 
         setShowInviteModal={setShowInviteModal} 
       />
       
       <InviteModal showInviteModal={showInviteModal} setShowInviteModal={setShowInviteModal} />
-
-      {/* Video Player Popover Overlay */}
-      <VideoPlayerPopover 
-        videoData={activeVideo} 
-        onClose={() => setActiveVideo(null)} 
-      />
+      <VideoPlayerPopover videoData={activeVideo} onClose={() => setActiveVideo(null)} />
 
       <div className="flex-1 flex flex-col min-w-0 md:ml-64 transition-all duration-300">
-        {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-200 bg-white sticky top-0 z-30">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-slate-900 rounded-md flex items-center justify-center">
@@ -147,7 +144,6 @@ export const Dashboard = () => {
             onUploadComplete={fetchVideos} 
           />
 
-          {/* Green Processing Progress Bar (Socket.io) */}
           {activeTab === 'my-uploads' && activeProcessingArray.length > 0 && (
             <div className="mb-10">
               <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
@@ -176,7 +172,6 @@ export const Dashboard = () => {
             </div>
           )}
 
-          {/* Completed Video Grid */}
           <div>
             <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
               <FolderKanban size={16} className="mr-2 text-slate-400" />
@@ -184,29 +179,65 @@ export const Dashboard = () => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {videos.map(video => (
-                <div 
-                  key={video._id} 
-                  className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => handlePlayVideo(video._id)}
-                >
-                  <div className="relative aspect-video bg-slate-100 flex items-center justify-center border-b border-slate-100 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 opacity-50 group-hover:scale-105 transition-transform duration-500"></div>
+                <div key={video._id} className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  
+                  {/* Thumbnail Area - Click to Play */}
+                  <div 
+                    className="relative aspect-video bg-slate-100 flex items-center justify-center border-b border-slate-100 overflow-hidden cursor-pointer"
+                    onClick={() => handlePlayVideo(video._id)}
+                  >
+                    {/* Render Actual Thumbnail if exists */}
+                    {video.thumbnailUrl ? (
+                      <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 opacity-50"></div>
+                    )}
+                    
                     <button className="relative z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all">
                       <Play size={20} className="ml-1" />
                     </button>
+                    
                     <div className="absolute top-3 right-3 z-10">
                       <Badge status={video.safetyStatus} />
                     </div>
-                    <div className="absolute bottom-3 right-3 z-10 px-2 py-1 bg-slate-900/70 rounded text-[10px] text-white font-medium">
+                    
+                    {/* Actual Duration Format (e.g., 2:05) */}
+                    <div className="absolute bottom-3 right-3 z-10 px-2 py-1 bg-slate-900/80 backdrop-blur-md rounded text-[10px] text-white font-medium flex items-center">
+                      <Clock size={10} className="mr-1" />
                       {video.durationSeconds ? `${Math.floor(video.durationSeconds / 60)}:${(video.durationSeconds % 60).toString().padStart(2, '0')}` : '0:00'}
                     </div>
                   </div>
-                  <div className="p-4 flex-1 flex flex-col">
+
+                  {/* Card Details & Dropdown Menu */}
+                  <div className="p-4 flex-1 flex flex-col relative">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+                      <h4 
+                        className="text-sm font-semibold text-slate-900 line-clamp-2 cursor-pointer hover:text-indigo-600 transition-colors pr-4"
+                        onClick={() => handlePlayVideo(video._id)}
+                      >
                         {video.title}
                       </h4>
-                      <MoreVertical size={16} className="text-slate-400 flex-shrink-0" />
+                      
+                      {/* Three-Dot Menu (Delete logic) */}
+                      <div className="relative">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === video._id ? null : video._id); }}
+                          className="text-slate-400 hover:text-slate-900 transition-colors p-1"
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        
+                        {openDropdownId === video._id && user?.role?.toLowerCase() === 'admin' && (
+                          <div className="absolute right-0 mt-1 w-32 bg-white border border-slate-200 rounded-md shadow-lg z-20 py-1 animate-in fade-in zoom-in-95 duration-100">
+                            <button 
+                              onClick={() => handleDeleteVideo(video._id)}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                            >
+                              <Trash2 size={14} className="mr-2" /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="mt-auto text-xs text-slate-500">
                       Uploaded {new Date(video.createdAt).toLocaleDateString()}
@@ -216,7 +247,6 @@ export const Dashboard = () => {
               ))}
             </div>
 
-            {/* Empty State Logic */}
             {videos.length === 0 && (
               <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center justify-center text-center bg-slate-50">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
@@ -228,11 +258,6 @@ export const Dashboard = () => {
                     ? "Get started by uploading your first video. It will be securely processed and analyzed." 
                     : "No videos have been shared with your organization yet."}
                 </p>
-                {activeTab === 'my-uploads' && (
-                  <Button variant="secondary" icon={Upload} onClick={() => setShowUploadArea(true)}>
-                    Upload a Video
-                  </Button>
-                )}
               </div>
             )}
           </div>

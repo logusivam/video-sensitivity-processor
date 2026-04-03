@@ -3,7 +3,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { requireAuth } from '../middlewares/requireAuth.js';
-import { uploadVideo, getMyVideos, getOrgVideos, getPlayUrl } from '../controllers/videoController.js';
+import { uploadVideo, getMyVideos, getOrgVideos, getPlayUrl, deleteVideo } from '../controllers/videoController.js';
 
 const router = express.Router();
 
@@ -25,5 +25,6 @@ router.post('/upload', upload.single('video'), uploadVideo);
 router.get('/my-uploads', getMyVideos);
 router.get('/organization', getOrgVideos);
 router.get('/play/:id', requireAuth, getPlayUrl);
+router.delete('/:id', requireAuth, deleteVideo);
 
 export default router;

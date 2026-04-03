@@ -8,7 +8,8 @@ const videoSchema = new mongoose.Schema({
     uploaderId: { type: String, required: true },
     title: { type: String, required: true },
     originalFilename: { type: String, required: true },
-    storagePath: { type: String },
+    storagePath: { type: String },    
+    thumbnailPath: { type: String }, // 📌 Added for Thumbnail
     processingStatus: { 
         type: String, 
         enum: ['pending', 'processing', 'completed', 'failed'], 
