@@ -19,5 +19,10 @@ export const videoService = {
   getPlayUrl: async (id) => {
     const response = await apiClient.get(`/videos/play/${id}`);
     return response.data;
+  },
+  deleteVideo: async (id) => {
+    // 📌 New Delete API Method
+    const response = await apiClient.delete(`/videos/${id}`);
+    return response.data;
   }
 };
