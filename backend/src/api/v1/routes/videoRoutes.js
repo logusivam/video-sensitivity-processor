@@ -16,7 +16,7 @@ if (!fs.existsSync(tempDir)) {
 
 const upload = multer({ 
     dest: tempDir,
-    limits: { fileSize: 2 * 1024 * 1024 * 1024 } // 2GB
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
 router.use(requireAuth);

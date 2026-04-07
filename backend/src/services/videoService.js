@@ -9,12 +9,65 @@ import { getIO } from '../config/socket.js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 📌 Sightengine Integration Function
+// 📌 The Queue System
+const processingQueue = [];
+let isProcessing = false;
+
+// ------------------------------------------------------------------
+// API 1: Sightengine FULL VIDEO Analyzer (Primary)
+// ------------------------------------------------------------------
+const analyzeVideoWithSightengine = async (videoPath) => {
+    try {
+        const data = new FormData();
+        data.append('media', fs.createReadStream(videoPath));
+        data.append('models', 'nudity,wad,gore');
+        data.append('api_user', process.env.SIGHTENGINE_API_USER);
+        data.append('api_secret', process.env.SIGHTENGINE_API_SECRET);
+
+        const response = await axios({
+            method: 'post',
+            url: 'https://api.sightengine.com/1.0/video/check-sync.json',
+            data: data,
+            headers: {
+                ...data.getHeaders(),
+                // 📌 Enforce connection closure to prevent "Ghost Streams" on their server
+                'Connection': 'close' 
+            },
+            // 📌 Add a strict 55-second timeout. If it hangs, we kill it locally.
+            timeout: 55000, 
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+        });
+
+        const result = response.data;
+        
+        if (result.status === 'failure') throw new Error(result.error?.message || 'Video API failed');
+
+        let isFlagged = false;
+        let flaggedReason = '';
+
+        if (result.data && result.data.frames) {
+            for (const frame of result.data.frames) {
+                if (frame.nudity && frame.nudity.safe <= 0.5) { isFlagged = true; flaggedReason = 'Nudity'; break; }
+                if (frame.weapon > 0.5 || frame.alcohol > 0.5 || frame.drugs > 0.5) { isFlagged = true; flaggedReason = 'Weapons/Contraband'; break; }
+                if (frame.gore && frame.gore.prob > 0.5) { isFlagged = true; flaggedReason = 'Violence'; break; }
+            }
+        }
+
+        return { success: true, isFlagged, reason: flaggedReason };
+    } catch (error) {
+        console.warn("⚠️ Sightengine Video API Failed. Falling back to Image frames.", error.response?.data || error.message);
+        return { success: false, isFlagged: false, reason: 'API_ERROR' }; 
+    }
+};
+
+// ------------------------------------------------------------------
+// API 2: Sightengine SINGLE FRAME Analyzer (Fallback)
+// ------------------------------------------------------------------
 const analyzeFrameWithSightengine = async (imagePath) => {
     try {
         const data = new FormData();
         data.append('media', fs.createReadStream(imagePath));
-        // We check for nudity, weapons/alcohol/drugs (wad), and violence (gore)
         data.append('models', 'nudity,wad,gore'); 
         data.append('api_user', process.env.SIGHTENGINE_API_USER);
         data.append('api_secret', process.env.SIGHTENGINE_API_SECRET);
@@ -23,127 +76,150 @@ const analyzeFrameWithSightengine = async (imagePath) => {
             method: 'post',
             url: 'https://api.sightengine.com/1.0/check.json',
             data: data,
-            headers: data.getHeaders()
+            headers: {
+                ...data.getHeaders(),
+                'Connection': 'close'
+            },
+            timeout: 15000
         });
 
         const result = response.data;
-        
-        // 📌 Classification Logic based on Sightengine's Response Structure
         let isFlagged = false;
         let flaggedReason = '';
 
-        // Check Nudity (Safe values are usually above 0.9)
-        if (result.nudity && result.nudity.safe <= 0.5) {
-            isFlagged = true;
-            flaggedReason += 'Nudity ';
-        }
-        
-        // Check Weapons, Alcohol, Drugs
-        if (result.weapon > 0.5 || result.alcohol > 0.5 || result.drugs > 0.5) {
-            isFlagged = true;
-            flaggedReason += 'Weapons/Contraband ';
-        }
-
-        // Check Violence/Gore
-        if (result.gore && result.gore.prob > 0.5) {
-            isFlagged = true;
-            flaggedReason += 'Violence/Gore ';
-        }
+        if (result.nudity && result.nudity.safe <= 0.5) { isFlagged = true; flaggedReason += 'Nudity '; }
+        if (result.weapon > 0.5 || result.alcohol > 0.5 || result.drugs > 0.5) { isFlagged = true; flaggedReason += 'Weapons/Contraband '; }
+        if (result.gore && result.gore.prob > 0.5) { isFlagged = true; flaggedReason += 'Violence/Gore '; }
 
         return { isFlagged, reason: flaggedReason.trim() };
     } catch (error) {
         console.error("Sightengine API Error:", error.response?.data || error.message);
-        // Fallback to safe if API fails, or you could choose to flag it for manual review
         return { isFlagged: false, reason: 'API_ERROR' }; 
     }
 };
 
-
-export const processVideoWorker = async (videoId, inputPath, uploaderId, organizationId) => {
+// ------------------------------------------------------------------
+// The Worker Task
+// ------------------------------------------------------------------
+const executeVideoTask = async ({ videoId, inputPath, uploaderId, organizationId }) => {
     const io = getIO();
     const room = `org_${organizationId}`;
     const outputPath = path.resolve(`uploads/temp/processed_${videoId}.mp4`);
-    const thumbnailName = `thumb_${videoId}.png`;
-    const tempThumbPath = path.resolve(`uploads/temp/${thumbnailName}`);
+    
+    const getFramePath = (index) => path.resolve(`uploads/temp/frame_${index}_${videoId}.png`);
+    const singleThumbPath = path.resolve(`uploads/temp/thumb_${videoId}.png`);
+
+    let safetyStatus = 'safe';
+    let finalThumbnailPath = null;
 
     try {
-        io.to(room).emit('processing_progress', { videoId, progress: 10, statusMessage: 'Extracting Metadata & Thumbnail...' });
+        io.to(room).emit('processing_progress', { videoId, progress: 10, statusMessage: 'Extracting Metadata...' });
 
         // 1. Get Exact Duration
-        const metadata = await new Promise((resolve, reject) => {
+        const durationSeconds = await new Promise((resolve, reject) => {
             ffmpeg.ffprobe(inputPath, (err, metadata) => {
                 if (err) reject(err);
-                else resolve(metadata);
+                else resolve(Math.floor(metadata.format.duration || 0));
             });
         });
-        const durationSeconds = Math.floor(metadata.format.duration || 0);
 
-        // 2. Extract Thumbnail at 1-second mark
-        await new Promise((resolve, reject) => {
-            ffmpeg(inputPath)
-                .screenshots({
-                    timestamps: ['00:00:01.000'],
-                    filename: thumbnailName,
-                    folder: path.resolve('uploads/temp'),
-                    size: '640x360'
-                })
-                .on('end', resolve)
-                .on('error', reject);
-        });
+        io.to(room).emit('processing_progress', { videoId, progress: 20, statusMessage: 'Running Video API Analysis...' });
 
-        io.to(room).emit('processing_progress', { videoId, progress: 30, statusMessage: 'Analyzing Content Safety...' });
+        // 2. ATTEMPT PRIMARY: Video API
+        const videoAnalysis = await analyzeVideoWithSightengine(inputPath);
 
-        // 3. Sightengine Safety Analysis (REAL API CALL)
-        // We pass the newly generated thumbnail to Sightengine
-        const analysisResult = await analyzeFrameWithSightengine(tempThumbPath);
-        const safetyStatus = analysisResult.isFlagged ? 'flagged' : 'safe';
+        if (videoAnalysis.success) {
+            if (videoAnalysis.isFlagged) {
+                console.log(`🚨 Video ${videoId} flagged by Video API. Reason: ${videoAnalysis.reason}`);
+                safetyStatus = 'flagged';
+            }
+            
+            io.to(room).emit('processing_progress', { videoId, progress: 40, statusMessage: 'Extracting UI Thumbnail...' });
+            
+            await new Promise((resolve, reject) => {
+                ffmpeg(inputPath)
+                    .screenshots({ timestamps: ['50%'], filename: path.basename(singleThumbPath), folder: path.dirname(singleThumbPath), size: '640x360' })
+                    .on('end', resolve)
+                    .on('error', reject);
+            });
+            finalThumbnailPath = singleThumbPath;
 
-        if (analysisResult.isFlagged) {
-            console.log(`Video ${videoId} flagged for: ${analysisResult.reason}`);
+        } else {
+            // 3. FALLBACK: Multi-Frame Image API
+            io.to(room).emit('processing_progress', { videoId, progress: 25, statusMessage: 'API Limit Reached. Falling back to Keyframe Analysis...' });
+
+            await new Promise((resolve, reject) => {
+                ffmpeg(inputPath)
+                    .screenshots({
+                        timestamps: ['25%', '50%', '75%'], 
+                        filename: `frame_%i_${videoId}.png`, 
+                        folder: path.resolve('uploads/temp'),
+                        size: '640x360'
+                    })
+                    .on('end', resolve)
+                    .on('error', reject);
+            });
+
+            const framePaths = [getFramePath(1), getFramePath(2), getFramePath(3)];
+            const validFrames = framePaths.filter(fp => fs.existsSync(fp));
+            
+            const analysisPromises = validFrames.map(fp => analyzeFrameWithSightengine(fp));
+            const analysisResults = await Promise.all(analysisPromises);
+
+            const flaggedResult = analysisResults.find(result => result.isFlagged);
+            if (flaggedResult) {
+                console.log(`🚨 Video ${videoId} flagged by Fallback Image API. Reason: ${flaggedResult.reason}`);
+                safetyStatus = 'flagged';
+            }
+
+            finalThumbnailPath = validFrames.length >= 2 ? validFrames[1] : validFrames[0];
         }
 
-        io.to(room).emit('processing_progress', { videoId, progress: 50, statusMessage: 'Optimizing for Streaming...' });
+        io.to(room).emit('processing_progress', { videoId, progress: 50, statusMessage: 'Optimizing for Web Streaming...' });
 
-        // 4. Optimize Video (FastStart for Netflix-like scrubbing)
+        // 4. Optimize Video (FastStart)
         await new Promise((resolve, reject) => {
             ffmpeg(inputPath)
                 .outputOptions(['-movflags +faststart', '-c:v libx264', '-preset fast'])
                 .on('progress', (p) => {
-                    // Map FFmpeg progress (0-100) to our remaining 50-90% window
                     const adjustedProgress = 50 + Math.floor((p.percent || 0) * 0.4);
-                    io.to(room).emit('processing_progress', { 
-                        videoId, progress: adjustedProgress, statusMessage: 'Optimizing for Streaming...' 
-                    });
+                    io.to(room).emit('processing_progress', { videoId, progress: adjustedProgress, statusMessage: 'Optimizing for Web Streaming...' });
                 })
                 .on('error', reject)
                 .on('end', resolve)
                 .save(outputPath);
         });
 
-        io.to(room).emit('processing_progress', { videoId, progress: 95, statusMessage: 'Uploading to Cloud Storage...' });
+        io.to(room).emit('processing_progress', { videoId, progress: 95, statusMessage: 'Uploading to Secure Vault...' });
 
         // 5. Upload Video and Thumbnail to Supabase
         const storagePath = `${organizationId}/${videoId}.mp4`;
         const thumbStoragePath = `${organizationId}/${videoId}.png`;
-
+        
         await supabase.storage.from('videos').upload(storagePath, fs.readFileSync(outputPath), { contentType: 'video/mp4', upsert: true });
-        await supabase.storage.from('thumbnails').upload(thumbStoragePath, fs.readFileSync(tempThumbPath), { contentType: 'image/png', upsert: true });
+        
+        if (finalThumbnailPath && fs.existsSync(finalThumbnailPath)) {
+            await supabase.storage.from('thumbnails').upload(thumbStoragePath, fs.readFileSync(finalThumbnailPath), { contentType: 'image/png', upsert: true });
+        }
 
         // 6. Update DB
-        const sizeBytes = fs.statSync(outputPath).size;
         await Video.findByIdAndUpdate(videoId, {
             storagePath,
-            thumbnailPath: thumbStoragePath,
+            thumbnailPath: (finalThumbnailPath && fs.existsSync(finalThumbnailPath)) ? thumbStoragePath : null,
             durationSeconds,
-            sizeBytes,
+            sizeBytes: fs.statSync(outputPath).size,
             processingStatus: 'completed',
             safetyStatus
         });
 
-        // 7. Cleanup & Notify
+        // 7. Dynamic Cleanup
         fs.unlinkSync(inputPath);
         fs.unlinkSync(outputPath);
-        fs.unlinkSync(tempThumbPath);
+        if (fs.existsSync(singleThumbPath)) fs.unlinkSync(singleThumbPath);
+        [1, 2, 3].forEach(i => {
+            const fp = getFramePath(i);
+            if (fs.existsSync(fp)) fs.unlinkSync(fp);
+        });
         
         io.to(room).emit('processing_completed', { videoId });
 
@@ -152,9 +228,45 @@ export const processVideoWorker = async (videoId, inputPath, uploaderId, organiz
         await Video.findByIdAndUpdate(videoId, { processingStatus: 'failed' });
         io.to(room).emit('processing_completed', { videoId }); 
         
-        // Cleanup on failure
+        // Failsafe Cleanup
         if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
         if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-        if (fs.existsSync(tempThumbPath)) fs.unlinkSync(tempThumbPath);
+        if (fs.existsSync(singleThumbPath)) fs.unlinkSync(singleThumbPath);
+        [1, 2, 3].forEach(i => {
+            const fp = getFramePath(i);
+            if (fs.existsSync(fp)) fs.unlinkSync(fp);
+        });
     }
+};
+
+// 📌 Queue Manager
+const processNextInQueue = async () => {
+    if (isProcessing || processingQueue.length === 0) return;
+    
+    isProcessing = true; 
+    
+    while (processingQueue.length > 0) {
+        const currentTask = processingQueue.shift(); 
+        try {
+            await executeVideoTask(currentTask);
+        } catch (error) {
+            console.error(`Queue Task Failed for video ${currentTask.videoId}:`, error);
+        }
+    }
+    
+    isProcessing = false; 
+};
+
+// 📌 Exported Worker Initiator
+export const processVideoWorker = (videoId, inputPath, uploaderId, organizationId) => {
+    processingQueue.push({ videoId, inputPath, uploaderId, organizationId });
+    
+    const io = getIO();
+    io.to(`org_${organizationId}`).emit('processing_progress', { 
+        videoId, 
+        progress: 0, 
+        statusMessage: 'Queued for processing...' 
+    });
+
+    processNextInQueue();
 };
