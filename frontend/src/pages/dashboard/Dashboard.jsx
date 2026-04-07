@@ -11,6 +11,7 @@ import { authService } from '../../services/auth.service';
 import { videoService } from '../../services/video.service';
 import { API_CONFIG } from '../../config/api.config';
 import { VideoPlayerPopover } from '../../components/dashboard/VideoPlayerPopover';
+import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -80,9 +81,13 @@ export const Dashboard = () => {
   const handlePlayVideo = async (videoId) => {
     try {
       const data = await videoService.getPlayUrl(videoId);
+      // If admin is playing a flagged video, show a toast warning
+      if (data.warning) {
+        toast.error(data.warning, { icon: '🚨' });
+      }
       setActiveVideo(data);
     } catch (err) {
-      alert(err.response?.data?.message || "Playback failed");
+      toast.error(err.response?.data?.message || "Playback failed", { icon: '🚨' });
     }
   };
 
@@ -90,9 +95,10 @@ export const Dashboard = () => {
     if (!window.confirm("Are you sure you want to permanently delete this video?")) return;
     try {
       await videoService.deleteVideo(videoId);
+      toast.success("Video deleted successfully", { icon: '✅' });
       fetchVideos();
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed");
+      toast.error(err.response?.data?.message || "Delete failed", { icon: '🚨' });
     }
   };
 

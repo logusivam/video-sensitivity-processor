@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { XCircle, Upload, CheckCircle2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { videoService } from '../../services/video.service';
+import toast from 'react-hot-toast';
 
 export const UploadArea = ({ showUploadArea, setShowUploadArea, onUploadComplete }) => {
   const [file, setFile] = useState(null);
@@ -16,8 +17,12 @@ export const UploadArea = ({ showUploadArea, setShowUploadArea, onUploadComplete
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      // Frontend Check: Prevent files larger than 50MB before they even upload
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        toast.error("File is too large. Maximum size is 50MB.", { icon: '🚨' });
+        return;
+      }
       setFile(selectedFile);
-      // Auto-extract filename minus extension
       setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
     }
   };
@@ -32,22 +37,22 @@ export const UploadArea = ({ showUploadArea, setShowUploadArea, onUploadComplete
     formData.append('isShared', isShared);
 
     try {
-      // 📌 Axios handles the Blue Network Progress Bar
       await videoService.uploadVideo(formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         setUploadProgress(percentCompleted);
       });
       
+      toast.success("Upload started!");
       setTimeout(() => {
         setFile(null);
         setTitle('');
         setUploadProgress(0);
         setShowUploadArea(false);
-        // The grid doesn't update yet; it waits for processing_completed socket
+        onUploadComplete(); 
       }, 500);
 
     } catch (err) {
-      console.error("Upload failed", err);
+      toast.error(err.response?.data?.message || "Upload failed", { icon: '🚨' });
     } finally {
       setIsUploading(false);
     }
@@ -78,7 +83,8 @@ export const UploadArea = ({ showUploadArea, setShowUploadArea, onUploadComplete
             {file ? <CheckCircle2 size={20} /> : <Upload size={20} />}
           </div>
           <p className="text-sm font-medium text-slate-900">{file ? file.name : 'Select video file'}</p>
-          <p className="text-xs text-slate-500 mt-1">{file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : 'Max 2GB'}</p>
+          {/* 📌 UPDATED TO 50MB */}
+          <p className="text-xs text-slate-500 mt-1">{file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : 'Max 50MB, Max 60 seconds'}</p>
         </div>
 
         <div className="space-y-4">
@@ -104,7 +110,6 @@ export const UploadArea = ({ showUploadArea, setShowUploadArea, onUploadComplete
             </label>
           </div>
 
-          {/* Blue Network Upload Bar */}
           {isUploading && (
             <div>
               <div className="flex justify-between text-[10px] font-bold text-blue-600 mb-1 uppercase tracking-wider">
