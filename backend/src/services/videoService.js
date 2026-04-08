@@ -14,55 +14,7 @@ const processingQueue = [];
 let isProcessing = false;
 
 // ------------------------------------------------------------------
-// API 1: Sightengine FULL VIDEO Analyzer (Primary)
-// ------------------------------------------------------------------
-const analyzeVideoWithSightengine = async (videoPath) => {
-    try {
-        const data = new FormData();
-        data.append('media', fs.createReadStream(videoPath));
-        data.append('models', 'nudity,wad,gore');
-        data.append('api_user', process.env.SIGHTENGINE_API_USER);
-        data.append('api_secret', process.env.SIGHTENGINE_API_SECRET);
-
-        const response = await axios({
-            method: 'post',
-            url: 'https://api.sightengine.com/1.0/video/check-sync.json',
-            data: data,
-            headers: {
-                ...data.getHeaders(),
-                // 📌 Enforce connection closure to prevent "Ghost Streams" on their server
-                'Connection': 'close' 
-            },
-            // 📌 Add a strict 55-second timeout. If it hangs, we kill it locally.
-            timeout: 55000, 
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity
-        });
-
-        const result = response.data;
-        
-        if (result.status === 'failure') throw new Error(result.error?.message || 'Video API failed');
-
-        let isFlagged = false;
-        let flaggedReason = '';
-
-        if (result.data && result.data.frames) {
-            for (const frame of result.data.frames) {
-                if (frame.nudity && frame.nudity.safe <= 0.5) { isFlagged = true; flaggedReason = 'Nudity'; break; }
-                if (frame.weapon > 0.5 || frame.alcohol > 0.5 || frame.drugs > 0.5) { isFlagged = true; flaggedReason = 'Weapons/Contraband'; break; }
-                if (frame.gore && frame.gore.prob > 0.5) { isFlagged = true; flaggedReason = 'Violence'; break; }
-            }
-        }
-
-        return { success: true, isFlagged, reason: flaggedReason };
-    } catch (error) {
-        console.warn("⚠️ Sightengine Video API Failed. Falling back to Image frames.", error.response?.data || error.message);
-        return { success: false, isFlagged: false, reason: 'API_ERROR' }; 
-    }
-};
-
-// ------------------------------------------------------------------
-// API 2: Sightengine SINGLE FRAME Analyzer (Fallback)
+// API: Sightengine SINGLE FRAME Analyzer (Free Plan Compatible)
 // ------------------------------------------------------------------
 const analyzeFrameWithSightengine = async (imagePath) => {
     try {
@@ -107,13 +59,12 @@ const executeVideoTask = async ({ videoId, inputPath, uploaderId, organizationId
     const outputPath = path.resolve(`uploads/temp/processed_${videoId}.mp4`);
     
     const getFramePath = (index) => path.resolve(`uploads/temp/frame_${index}_${videoId}.png`);
-    const singleThumbPath = path.resolve(`uploads/temp/thumb_${videoId}.png`);
 
     let safetyStatus = 'safe';
     let finalThumbnailPath = null;
 
     try {
-        io.to(room).emit('processing_progress', { videoId, progress: 10, statusMessage: 'Extracting Metadata...' });
+        io.to(room).emit('processing_progress', { videoId, progress: 10, statusMessage: 'Extracting Metadata & Keyframes...' });
 
         // 1. Get Exact Duration
         const durationSeconds = await new Promise((resolve, reject) => {
@@ -123,56 +74,41 @@ const executeVideoTask = async ({ videoId, inputPath, uploaderId, organizationId
             });
         });
 
-        io.to(room).emit('processing_progress', { videoId, progress: 20, statusMessage: 'Running Video API Analysis...' });
+        // 2. Multi-Frame Extraction (25%, 50%, and 75% marks)
+        await new Promise((resolve, reject) => {
+            ffmpeg(inputPath)
+                .screenshots({
+                    timestamps: ['25%', '50%', '75%'], 
+                    filename: `frame_%i_${videoId}.png`, // Generates frame_1, frame_2, frame_3
+                    folder: path.resolve('uploads/temp'),
+                    size: '640x360'
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
 
-        // 2. ATTEMPT PRIMARY: Video API
-        const videoAnalysis = await analyzeVideoWithSightengine(inputPath);
+        io.to(room).emit('processing_progress', { videoId, progress: 25, statusMessage: 'Running Multi-Frame Safety Analysis...' });
 
-        if (videoAnalysis.success) {
-            if (videoAnalysis.isFlagged) {
-                console.log(`🚨 Video ${videoId} flagged by Video API. Reason: ${videoAnalysis.reason}`);
-                safetyStatus = 'flagged';
-            }
-            
-            io.to(room).emit('processing_progress', { videoId, progress: 40, statusMessage: 'Extracting UI Thumbnail...' });
-            
-            await new Promise((resolve, reject) => {
-                ffmpeg(inputPath)
-                    .screenshots({ timestamps: ['50%'], filename: path.basename(singleThumbPath), folder: path.dirname(singleThumbPath), size: '640x360' })
-                    .on('end', resolve)
-                    .on('error', reject);
-            });
-            finalThumbnailPath = singleThumbPath;
-
-        } else {
-            // 3. FALLBACK: Multi-Frame Image API
-            io.to(room).emit('processing_progress', { videoId, progress: 25, statusMessage: 'API Limit Reached. Falling back to Keyframe Analysis...' });
-
-            await new Promise((resolve, reject) => {
-                ffmpeg(inputPath)
-                    .screenshots({
-                        timestamps: ['25%', '50%', '75%'], 
-                        filename: `frame_%i_${videoId}.png`, 
-                        folder: path.resolve('uploads/temp'),
-                        size: '640x360'
-                    })
-                    .on('end', resolve)
-                    .on('error', reject);
-            });
-
-            const framePaths = [getFramePath(1), getFramePath(2), getFramePath(3)];
-            const validFrames = framePaths.filter(fp => fs.existsSync(fp));
-            
+        // 3. Concurrent Sightengine Analysis (Image API - Safe for Free Plan)
+        const framePaths = [getFramePath(1), getFramePath(2), getFramePath(3)];
+        const validFrames = framePaths.filter(fp => fs.existsSync(fp));
+        
+        if (validFrames.length > 0) {
             const analysisPromises = validFrames.map(fp => analyzeFrameWithSightengine(fp));
             const analysisResults = await Promise.all(analysisPromises);
 
+            // If ANY of the 3 frames triggered a flag, the entire video is flagged
             const flaggedResult = analysisResults.find(result => result.isFlagged);
+            
             if (flaggedResult) {
-                console.log(`🚨 Video ${videoId} flagged by Fallback Image API. Reason: ${flaggedResult.reason}`);
+                console.log(`🚨 Video ${videoId} flagged by Image API. Reason: ${flaggedResult.reason}`);
                 safetyStatus = 'flagged';
             }
 
+            // Use the 50% frame as the UI thumbnail
             finalThumbnailPath = validFrames.length >= 2 ? validFrames[1] : validFrames[0];
+        } else {
+            console.warn(`⚠️ No frames could be extracted for video ${videoId}`);
         }
 
         io.to(room).emit('processing_progress', { videoId, progress: 50, statusMessage: 'Optimizing for Web Streaming...' });
@@ -215,7 +151,6 @@ const executeVideoTask = async ({ videoId, inputPath, uploaderId, organizationId
         // 7. Dynamic Cleanup
         fs.unlinkSync(inputPath);
         fs.unlinkSync(outputPath);
-        if (fs.existsSync(singleThumbPath)) fs.unlinkSync(singleThumbPath);
         [1, 2, 3].forEach(i => {
             const fp = getFramePath(i);
             if (fs.existsSync(fp)) fs.unlinkSync(fp);
@@ -231,7 +166,6 @@ const executeVideoTask = async ({ videoId, inputPath, uploaderId, organizationId
         // Failsafe Cleanup
         if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
         if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-        if (fs.existsSync(singleThumbPath)) fs.unlinkSync(singleThumbPath);
         [1, 2, 3].forEach(i => {
             const fp = getFramePath(i);
             if (fs.existsSync(fp)) fs.unlinkSync(fp);
@@ -239,7 +173,9 @@ const executeVideoTask = async ({ videoId, inputPath, uploaderId, organizationId
     }
 };
 
-// 📌 Queue Manager
+// ------------------------------------------------------------------
+// Queue Manager
+// ------------------------------------------------------------------
 const processNextInQueue = async () => {
     if (isProcessing || processingQueue.length === 0) return;
     
@@ -257,7 +193,9 @@ const processNextInQueue = async () => {
     isProcessing = false; 
 };
 
-// 📌 Exported Worker Initiator
+// ------------------------------------------------------------------
+// Exported Worker Initiator
+// ------------------------------------------------------------------
 export const processVideoWorker = (videoId, inputPath, uploaderId, organizationId) => {
     processingQueue.push({ videoId, inputPath, uploaderId, organizationId });
     
