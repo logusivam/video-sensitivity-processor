@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, AlertCircle, Check, ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Lock, AlertCircle, Check } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
 import { InputField } from '../../components/ui/InputField';

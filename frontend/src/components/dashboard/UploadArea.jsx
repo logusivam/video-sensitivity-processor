@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { XCircle, Upload, CheckCircle2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { videoService } from '../../services/video.service';
