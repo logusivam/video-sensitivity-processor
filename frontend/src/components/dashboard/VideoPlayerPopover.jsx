@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, ShieldAlert } from 'lucide-react';
+//import React from 'react';
+import { X } from 'lucide-react';
 
 export const VideoPlayerPopover = ({ videoData, onClose }) => {
   if (!videoData) return null;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Mail, Lock, Check } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { InputField } from '../../components/ui/InputField';
