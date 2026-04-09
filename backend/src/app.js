@@ -29,6 +29,10 @@ app.use('/api/v1', apiLimiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/videos', videoRoutes); // 📌 Add this
 
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date() });
+});
 
 // Global Error Handler
 app.use((err, req, res, next) => {
