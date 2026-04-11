@@ -7,6 +7,7 @@ import { Register } from './pages/auth/Register';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
 import { Dashboard } from './pages/dashboard/Dashboard';
+import { Landing } from './pages/landing/Landing'; // 📌 Import the new landing page
 
 function App() {
   return (
@@ -14,6 +15,9 @@ function App() {
       <Toaster position="top-right" /> {/* 📌 ADD THIS */}
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
+          {/* 📌 Set the Landing Page as the default route */}
+          <Route path="/" element={<Landing />} />
+
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -21,8 +25,10 @@ function App() {
           </Route>
           
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/dashboard" element={<Dashboard />} /> 
+
+          {/* Redirect any unknown routes to the landing page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </>
