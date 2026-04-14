@@ -131,10 +131,10 @@ export function Nav({ setModal }) {
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(15,23,42,0.03)"; e.currentTarget.style.color = "rgba(15,23,42,0.7)"; }}>
             Support
           </button>
-          <button onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 0 20px rgba(79,70,229,0.4)", transition: "all 0.2s" }}
+          <button onClick={() => navigate("/register")} style={{ background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 0 20px rgba(79,70,229,0.4)", transition: "all 0.2s" }}
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 0 32px rgba(79,70,229,0.65)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 0 20px rgba(79,70,229,0.4)"; }}>
-            Dashboard Login
+            Get Started
           </button>
         </div>
 
