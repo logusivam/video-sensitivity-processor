@@ -152,7 +152,7 @@ export function Nav({ setModal }) {
               <button onClick={() => { modal ? setModal(modal) : scrollTo(section); setOpen(false); }} style={{ background: "none", border: "none", width: "100%", textAlign: "left", color: "rgba(15,23,42,0.8)", fontSize: 16, fontFamily: "'Inter',sans-serif", cursor: "pointer", padding: "14px 0" }}>{label}</button>
             </div>
           ))}
-          <button onClick={() => { setModal("docs"); setOpen(false); }} style={{ width: "100%", marginTop: 16, background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>Get Started</button>
+          <button onClick={() => { setOpen(false); navigate("/register"); }} style={{ width: "100%", marginTop: 16, background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>Get Started</button>
         </div>
       )}
 

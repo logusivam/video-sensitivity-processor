@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Doc Typography
 const docH2 = { color: "#0F172A", fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 20, marginBottom: 12, marginTop: 28, letterSpacing: -0.5 };
@@ -26,7 +27,8 @@ export function Badge({ children, color = "#22C55E" }) {
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600, color, fontFamily: "'Inter',monospace", marginRight: 6 }}>{children}</span>;
 }
 
-export function DocsContent({ onClose }) {
+export function DocsContent({ onClose, setModal }) {
+  const navigate = useNavigate();
   return (
     <div>
       <p style={docP}>Welcome to the SentinelShield knowledge base. Our enterprise-grade platform ensures your organization's video content is securely moderated, optimized, and streamed with zero buffering.</p>
@@ -68,14 +70,14 @@ export function DocsContent({ onClose }) {
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-        <DocBtn>View Organization Library</DocBtn>
-        <DocBtn variant="secondary" onClick={onClose}>Contact Support</DocBtn>
+        <DocBtn onClick={() => { setModal(null); navigate("/login"); }}>View Organization Library</DocBtn>
+        <DocBtn variant="secondary" onClick={() => setModal("support")}>Contact Support</DocBtn>
       </div>
     </div>
   );
 }
 
-export function PrivacyContent() {
+export function PrivacyContent({ setModal }) {
   return (
     <div>
       <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(79,70,229,0.12)", border: "1px solid rgba(79,70,229,0.3)", borderRadius: 6, padding: "4px 12px", marginBottom: 16 }}>
@@ -101,7 +103,7 @@ export function PrivacyContent() {
       <p style={docP}>Your optimized videos are stored in secure, encrypted cloud buckets (Supabase). Access is protected via temporary, cryptographically signed URLs that expire automatically. We implement industry-standard security measures to prevent unauthorized access.</p>
       <h2 style={docH2}>4. Data Retention</h2>
       <p style={docP}>We retain your videos and account data as long as your organization's account is active. Administrators may permanently delete individual videos at any time. Deleted videos are immediately scrubbed from our active cloud storage.</p>
-      <div style={{ marginTop: 20 }}><DocBtn>Contact Data Privacy Team</DocBtn></div>
+      <div style={{ marginTop: 20 }}><DocBtn onClick={() => setModal("support-privacy")}>Contact Data Privacy Team</DocBtn></div>
     </div>
   );
 }
@@ -134,8 +136,8 @@ export function TermsContent({ onAccept }) {
   );
 }
 
-export function SupportContent() {
-  const [ticket, setTicket] = useState({ type: "", msg: "", email: "" });
+export function SupportContent({ initialCategory = "" }) {
+  const [ticket, setTicket] = useState({ type: initialCategory, msg: "", email: "" });
   const [sent, setSent] = useState(false);
 
   const categories = [

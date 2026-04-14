@@ -51,11 +51,13 @@ export const Landing = () => {
     };
   }, [isLoading, isTouchDevice]);
 
+  // 📌 UPDATED: Passed setModal and created the specific "support-privacy" state
   const modalConfig = {
-    docs:    { title: "SentinelShield - Documentation", content: <DocsContent onClose={() => setModal(null)} /> },
-    privacy: { title: "Privacy Policy", content: <PrivacyContent /> },
+    docs:    { title: "SentinelShield - Documentation", content: <DocsContent onClose={() => setModal(null)} setModal={setModal} /> },
+    privacy: { title: "Privacy Policy", content: <PrivacyContent setModal={setModal} /> },
     terms:   { title: "Terms of Service", content: <TermsContent onAccept={() => { setTermsAccepted(true); setModal(null); }} /> },
     support: { title: "SentinelShield - Support", content: <SupportContent /> },
+    "support-privacy": { title: "SentinelShield - Support", content: <SupportContent initialCategory="privacy" /> },
   };
 
   return (
@@ -68,9 +70,9 @@ export const Landing = () => {
         ::-webkit-scrollbar-track{background:#F8FAFC}
         ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
         ::-webkit-scrollbar-thumb:hover{background:#94A3B8}
-        ::selection{background:rgba(79,70,229,0.25);color:#0F172A}
+        ::selection{background:rgba(10,74,135,0.25);color:#0F172A}
         @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-        @keyframes pulseLogo{0%,100%{transform:scale(1);box-shadow:0 10px 40px rgba(79,70,229,0.3)}50%{transform:scale(1.05);box-shadow:0 15px 50px rgba(79,70,229,0.5)}}
+        @keyframes pulseLogo{0%,100%{transform:scale(1);box-shadow:0 10px 40px rgba(10,74,135,0.2)}50%{transform:scale(1.05);box-shadow:0 15px 50px rgba(10,74,135,0.4)}}
       `}</style>
 
       <Preloader onComplete={() => setIsLoading(false)} />
