@@ -1,6 +1,11 @@
+// Safely check if the app is running in a browser and if it's on HTTPS
+const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+
 export const API_CONFIG = {
-  // Using Vite's env variable system, falling back to localhost
-  BASE_URL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000',
+  // If HTTPS, use the production backend URL. Otherwise, use localhost.
+  BASE_URL: isHttps 
+    ? (import.meta.env.VITE_BACKEND_URL || '') 
+    : 'http://localhost:5000',
   API_VERSION: '/api/v1',
 };
 
@@ -10,8 +15,8 @@ export const ENDPOINTS = {
     login: '/auth/login',
     register: '/auth/register',
     validateOrg: '/auth/validate-org',    
-    requestReset: '/auth/request-reset', // Added
-    completeReset: '/auth/reset-password', // Added
-    logout: '/auth/logout' // Added
+    requestReset: '/auth/request-reset', 
+    completeReset: '/auth/reset-password', 
+    logout: '/auth/logout' 
   }
 };
