@@ -12,7 +12,8 @@ export function Particles({ count = 25 }) {
         <div key={p.id} style={{
           position: "absolute", left: `${p.x}%`, borderRadius: "50%",
           width: p.size, height: p.size,
-          background: `rgba(${Math.random() > 0.5 ? "79,70,229" : "124,58,237"},${p.opacity})`,
+          /* Deep Blue RGB: 10,74,135 | Bright Teal RGB: 7,209,178 */
+background: `rgba(${Math.random() > 0.5 ? "10,74,135" : "7,209,178"},${p.opacity})`,
           animation: `floatUp ${p.speed}s ${p.delay}s linear infinite`,
           top: "110%",
         }}/>
@@ -60,7 +61,7 @@ export function Modal({ open, onClose, children, title }) {
       }}>
         <div style={{ padding: "24px 28px 20px", borderBottom: "1px solid rgba(15,23,42,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#4F46E5,#7C3AED)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#0A4A87,#07D1B2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
             </div>
             <span style={{ color: "#0F172A", fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{title}</span>
@@ -71,7 +72,7 @@ export function Modal({ open, onClose, children, title }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
-        <div style={{ overflowY: "auto", padding: "28px", flex: 1, scrollbarWidth: "thin", scrollbarColor: "#4F46E5 transparent" }}>
+        <div style={{ overflowY: "auto", padding: "28px", flex: 1, scrollbarWidth: "thin", scrollbarColor: "#0A4A87 transparent" }}>
           {children}
         </div>
       </div>

@@ -58,7 +58,7 @@ export function Preloader({ onComplete }) {
         />
       </div> 
       <div style={{ width: 220, height: 4, background: "rgba(15,23,42,0.06)", borderRadius: 4, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${Math.min(progress, 100)}%`, background: "linear-gradient(90deg, #4F46E5, #7C3AED)", transition: "width 0.2s ease-out" }} />
+        <div style={{ height: "100%", width: `${Math.min(progress, 100)}%`, background: "linear-gradient(90deg, #0A4A87, #07D1B2)", transition: "width 0.2s ease-out" }} />
       </div>
     </div>
   );
@@ -131,7 +131,7 @@ export function Nav({ setModal }) {
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(15,23,42,0.03)"; e.currentTarget.style.color = "rgba(15,23,42,0.7)"; }}>
             Support
           </button>
-          <button onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 0 20px rgba(79,70,229,0.4)", transition: "all 0.2s" }}
+          <button onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 0 20px rgba(79,70,229,0.4)", transition: "all 0.2s" }}
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 0 32px rgba(79,70,229,0.65)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 0 20px rgba(79,70,229,0.4)"; }}>
             Dashboard Login
@@ -152,7 +152,7 @@ export function Nav({ setModal }) {
               <button onClick={() => { modal ? setModal(modal) : scrollTo(section); setOpen(false); }} style={{ background: "none", border: "none", width: "100%", textAlign: "left", color: "rgba(15,23,42,0.8)", fontSize: 16, fontFamily: "'Inter',sans-serif", cursor: "pointer", padding: "14px 0" }}>{label}</button>
             </div>
           ))}
-          <button onClick={() => { setModal("docs"); setOpen(false); }} style={{ width: "100%", marginTop: 16, background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>Get Started</button>
+          <button onClick={() => { setModal("docs"); setOpen(false); }} style={{ width: "100%", marginTop: 16, background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>Get Started</button>
         </div>
       )}
 
@@ -183,21 +183,24 @@ export function Scanner3D() {
 
   return (
     <div ref={ref} onClick={handleClick} style={{ position: "relative", width: "100%", maxWidth: 460, perspective: 1200, cursor: phase === "scanning" ? "default" : "pointer" }}>
-      <div style={{ position: "absolute", inset: -80, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(79,70,229,0.22) 0%, transparent 65%)", filter: "blur(50px)", pointerEvents: "none", transition: "opacity 0.5s", opacity: phase === "done" ? 0.4 : 1 }}/>
+      {/* Updated Background Glow using Deep Blue RGB (10, 74, 135) */}
+      <div style={{ position: "absolute", inset: -80, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(10,74,135,0.15) 0%, transparent 65%)", filter: "blur(50px)", pointerEvents: "none", transition: "opacity 0.5s", opacity: phase === "done" ? 0.4 : 1 }}/>
       
       <div style={{ transform: `rotateX(${pos.y}deg) rotateY(${pos.x}deg)`, transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)", transformStyle: "preserve-3d" }}>
         <div style={{
           background: "linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)",
-          border: `1px solid ${phase === "done" ? "rgba(34,197,94,0.4)" : "rgba(79,70,229,0.2)"}`,
+          border: `1px solid ${phase === "done" ? "rgba(34,197,94,0.4)" : "rgba(7,209,178,0.3)"}`, // Idle border uses Teal
           borderRadius: 24, padding: "28px 28px 24px",
-          boxShadow: `0 0 80px ${phase === "done" ? "rgba(34,197,94,0.15)" : "rgba(79,70,229,0.15)"}, 0 40px 60px rgba(15,23,42,0.08)`,
+          boxShadow: `0 0 80px ${phase === "done" ? "rgba(34,197,94,0.15)" : "rgba(7,209,178,0.15)"}, 0 40px 60px rgba(15,23,42,0.08)`,
           position: "relative", overflow: "hidden", minHeight: 400,
           transition: "border-color 0.5s, box-shadow 0.5s",
         }}>
-          <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "linear-gradient(rgba(79,70,229,1) 1px, transparent 1px), linear-gradient(90deg, rgba(79,70,229,1) 1px, transparent 1px)", backgroundSize: "28px 28px", animation: "gridPulse 4s ease-in-out infinite" }}/>
+          {/* Updated Grid to Deep Blue */}
+          <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "linear-gradient(rgba(10,74,135,1) 1px, transparent 1px), linear-gradient(90deg, rgba(10,74,135,1) 1px, transparent 1px)", backgroundSize: "28px 28px", animation: "gridPulse 4s ease-in-out infinite" }}/>
           
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 22 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: phase === "done" ? "#22C55E" : phase === "scanning" ? "#F59E0B" : "#4F46E5", animation: phase === "scanning" ? "blink 0.8s infinite" : "none" }}/>
+            {/* 📌 UPDATED: Glowing dot uses Bright Teal (#07D1B2) when scanning */}
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: phase === "done" ? "#22C55E" : phase === "scanning" ? "#07D1B2" : "#0A4A87", animation: phase === "scanning" ? "blink 0.8s infinite" : "none", boxShadow: phase === "scanning" ? "0 0 8px #07D1B2" : "none" }}/>
             <span style={{ color: "rgba(15,23,42,0.5)", fontSize: 11, fontFamily: "'Inter',monospace", letterSpacing: 2.5, textTransform: "uppercase" }}>
               {phase === "idle" ? "AI Scanner · Click Ready" : phase === "scanning" ? `Processing · ${Math.min(Math.round(scanPct), 100)}%` : "Analysis Complete · Safe"}
             </span>
@@ -206,23 +209,26 @@ export function Scanner3D() {
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
             <div style={{
               width: 120, height: 140, borderRadius: 14,
-              background: "linear-gradient(145deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.04) 100%)",
-              border: `1px solid ${phase === "done" ? "rgba(34,197,94,0.5)" : "rgba(99,102,241,0.3)"}`,
+              // Updated inner box background gradients to Blue/Teal
+              background: "linear-gradient(145deg, rgba(10,74,135,0.06) 0%, rgba(7,209,178,0.04) 100%)",
+              border: `1px solid ${phase === "done" ? "rgba(34,197,94,0.5)" : "rgba(7,209,178,0.3)"}`,
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12,
               position: "relative", overflow: "hidden",
               transform: phase === "scanning" ? "scale(0.96)" : "scale(1)",
               transition: "transform 0.4s ease, border-color 0.5s",
             }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke={phase === "done" ? "#22C55E" : "#4F46E5"} strokeWidth="1.5"/>
-                <path d="M14 2v6h6" stroke={phase === "done" ? "#22C55E" : "#4F46E5"} strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M10 11l4 2.5-4 2.5V11z" stroke={phase === "done" ? "#22C55E" : "#4F46E5"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke={phase === "done" ? "#22C55E" : "#0A4A87"} strokeWidth="1.5"/>
+                <path d="M14 2v6h6" stroke={phase === "done" ? "#22C55E" : "#0A4A87"} strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M10 11l4 2.5-4 2.5V11z" stroke={phase === "done" ? "#22C55E" : "#0A4A87"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               {phase === "scanning" && (
                 <div style={{
                   position: "absolute", left: -10, right: -10, height: 3,
-                  background: "linear-gradient(90deg, transparent, #4F46E5 30%, #7C3AED 70%, transparent)",
-                  top: `${scanPct}%`, boxShadow: "0 0 16px #4F46E5",
+                  // 📌 UPDATED: Laser box shadow now pops with Bright Teal (#07D1B2)
+                  background: "linear-gradient(90deg, transparent, #0A4A87 30%, #07D1B2 70%, transparent)",
+                  top: `${scanPct}%`, 
+                  boxShadow: "0 0 16px #07D1B2",
                   transition: "top 0.04s linear",
                 }}/>
               )}
@@ -236,7 +242,7 @@ export function Scanner3D() {
             </div>
           ) : (
             <div style={{ background: "rgba(15,23,42,0.08)", borderRadius: 8, overflow: "hidden", height: 5, marginTop: 10 }}>
-              <div style={{ height: "100%", width: `${Math.min(scanPct, 100)}%`, background: "linear-gradient(90deg, #4F46E5, #7C3AED)", transition: "width 0.04s linear" }}/>
+              <div style={{ height: "100%", width: `${Math.min(scanPct, 100)}%`, background: "linear-gradient(90deg, #0A4A87, #07D1B2)", transition: "width 0.04s linear" }}/>
             </div>
           )}
         </div>
@@ -262,14 +268,14 @@ export function Hero({ setModal }) {
           <div>
             <FadeIn inView={inView} delay={0.1} y={40}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(79,70,229,0.1)", border: "1px solid rgba(79,70,229,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", boxShadow: "0 0 8px #4F46E5", animation: "pulseDot 2s infinite" }}/>
-                <span style={{ color: "#4F46E5", fontSize: 13, fontWeight: 600, fontFamily: "'Inter',sans-serif" }}>SentinelShield is live</span>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0A4A87", boxShadow: "0 0 8px #0A4A87", animation: "pulseDot 2s infinite" }}/>
+                <span style={{ color: "#0A4A87", fontSize: 13, fontWeight: 600, fontFamily: "'Inter',sans-serif" }}>SentinelShield is live</span>
               </div>
             </FadeIn>
             <FadeIn inView={inView} delay={0.2} y={40}>
               <h1 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(40px,5vw,68px)", fontWeight: 800, color: "#0F172A", lineHeight: 1.08, letterSpacing: -2.5, marginBottom: 24 }}>
                 Enterprise-Grade<br/>
-                <span style={{ background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #A855F7 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                <span style={{ background: "linear-gradient(135deg, #0A4A87 0%, #07D1B2 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                   Video Moderation.
                 </span>
               </h1>
@@ -281,7 +287,7 @@ export function Hero({ setModal }) {
             </FadeIn>
             <FadeIn inView={inView} delay={0.4} y={40}>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                <button onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#fff", border: "none", borderRadius: 12, padding: "16px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif", boxShadow: "0 10px 30px -10px rgba(79,70,229,0.5)", transition: "all 0.3s ease" }}
+                <button onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 12, padding: "16px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif", boxShadow: "0 10px 30px -10px rgba(79,70,229,0.5)", transition: "all 0.3s ease" }}
                   onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 20px 40px -10px rgba(79,70,229,0.6)"; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 10px 30px -10px rgba(79,70,229,0.5)"; }}>
                   Dashboard Login →
@@ -346,7 +352,7 @@ export function FeatureTabs() {
                 const isActive = activeTab === i;
                 return (
                   <button key={tab.id} onClick={() => setActiveTab(i)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "20px 24px", background: isActive ? "linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.02) 100%)" : "transparent", border: `1px solid ${isActive ? "rgba(79,70,229,0.3)" : "rgba(15,23,42,0.05)"}`, borderRadius: 16, cursor: "pointer", transition: "all 0.3s ease", textAlign: "left" }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: isActive ? "#4F46E5" : "rgba(15,23,42,0.05)", color: isActive ? "#fff" : "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s ease" }}>{tab.icon}</div>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: isActive ? "#0A4A87" : "rgba(15,23,42,0.05)", color: isActive ? "#fff" : "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s ease" }}>{tab.icon}</div>
                     <span style={{ color: isActive ? "#0F172A" : "rgba(15,23,42,0.6)", fontWeight: 700, fontSize: 16, fontFamily: "'Plus Jakarta Sans',sans-serif", transition: "color 0.3s ease" }}>{tab.label}</span>
                   </button>
                 );
@@ -356,7 +362,7 @@ export function FeatureTabs() {
           <FadeIn inView={inView} delay={0.3} className="tab-content" style={{ position: "relative", height: "100%", minHeight: 340 }}>
             {tabs.map((tab, i) => (
               <div key={tab.id} className={`tab-panel ${activeTab === i ? 'active' : ''}`} style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)", border: "1px solid rgba(15,23,42,0.08)", borderRadius: 24, padding: 40, display: "flex", flexDirection: "column", justifyContent: "center", boxShadow: "0 20px 40px rgba(15,23,42,0.05)", opacity: activeTab === i ? 1 : 0, transform: activeTab === i ? "translateY(0)" : "translateY(20px)", pointerEvents: activeTab === i ? "auto" : "none", transition: "all 0.6s cubic-bezier(0.16, 1, 0.3, 1)" }}>
-                <div style={{ display: "inline-flex", background: "rgba(79,70,229,0.1)", color: "#4F46E5", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: "'Inter',monospace", marginBottom: 24, width: "fit-content" }}>{tab.stat}</div>
+                <div style={{ display: "inline-flex", background: "rgba(79,70,229,0.1)", color: "#0A4A87", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: "'Inter',monospace", marginBottom: 24, width: "fit-content" }}>{tab.stat}</div>
                 <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 28, fontWeight: 800, color: "#0F172A", marginBottom: 16, letterSpacing: -0.5 }}>{tab.title}</h3>
                 <p style={{ color: "rgba(15,23,42,0.7)", fontSize: 16, lineHeight: 1.7, fontFamily: "'Inter',sans-serif" }}>{tab.desc}</p>
               </div>
@@ -381,8 +387,8 @@ export function HowItWorks() {
   const pipelineSteps = [
     { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Secure Ingestion", subtitle: "Multer · 50MB / 60s Limits", desc: "Military-grade upload pipeline with strict file validation, rate limiting, and size constraints that reject malformed payloads before they reach the processing layer.", color: "#6366F1" },
     { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="1.5"/><path d="M8 21h8M12 17v4M9 8l3 2-3 2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Smart Frame Extraction", subtitle: "FFmpeg @ 25%, 50%, 75%", desc: "FFmpeg intelligently samples three representative keyframes at temporal quartiles, maximising content coverage while minimising compute cost.", color: "#8B5CF6" },
-    { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35M11 8v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Sightengine AI Scan", subtitle: "Weapons · Gore · Nudity", desc: "Each frame is submitted to Sightengine's multi-category deep learning model for comprehensive threat detection across violence, explicit, and disturbing content vectors.", color: "#A855F7" },
-    { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "FastStart Optimization", subtitle: "MP4 Rebuilt for Web", desc: "The moov atom is relocated to the file header so browsers can begin playback on the very first packet — zero buffering, zero waiting, instant streaming.", color: "#7C3AED" },
+    { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M21 21l-4.35-4.35M11 8v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Sightengine AI Scan", subtitle: "Weapons · Gore · Nudity", desc: "Each frame is submitted to Sightengine's multi-category deep learning model for comprehensive threat detection across violence, explicit, and disturbing content vectors.", color: "#05B096" },
+    { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "FastStart Optimization", subtitle: "MP4 Rebuilt for Web", desc: "The moov atom is relocated to the file header so browsers can begin playback on the very first packet — zero buffering, zero waiting, instant streaming.", color: "#07D1B2" },
     { icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><rect x="8" y="8" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/></svg>, title: "Supabase Vault", subtitle: "Signed URLs · Secure CDN", desc: "Clean assets are stored in Supabase's encrypted object storage with short-lived signed URLs — direct access to raw storage is impossible without a fresh token.", color: "#6D28D9" },
   ];
 
@@ -449,8 +455,8 @@ export function HowItWorks() {
 export function EnterpriseSection() {
   const { ref, inView } = useInView(0.1);
   const features = [
-    { title: "Concurrency Control", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, desc: "A custom queue system with priority scheduling prevents server overloads during traffic spikes — automatically throttling concurrent video jobs.", tag: "Queue System", size: "large", color: "#4F46E5", gridCol: "span 7" },
-    { title: "Real-Time WebSockets", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc: "Socket.io-powered live progress bars stream scan status to the client in real time — no polling, no page refreshes, no delays.", tag: "Socket.io", size: "small", color: "#7C3AED", gridCol: "span 5" },
+    { title: "Concurrency Control", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, desc: "A custom queue system with priority scheduling prevents server overloads during traffic spikes — automatically throttling concurrent video jobs.", tag: "Queue System", size: "large", color: "#0A4A87", gridCol: "span 7" },
+    { title: "Real-Time WebSockets", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, desc: "Socket.io-powered live progress bars stream scan status to the client in real time — no polling, no page refreshes, no delays.", tag: "Socket.io", size: "small", color: "#07D1B2", gridCol: "span 5" },
     { title: "Role-Based Access", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, desc: "Admins can review and permanently delete flagged content. Standard users operate in a sandboxed environment.", tag: "RBAC", size: "small", color: "#8B5CF6", gridCol: "span 5" },
     { title: "API Rate Limiting", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zM12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>, desc: "MongoDB-backed usage tracking enforces per-user and per-org rate limits with graceful degradation.", tag: "MongoDB", size: "large", color: "#6D28D9", gridCol: "span 7" },
   ];
@@ -513,21 +519,21 @@ export function CTA({ setModal }) {
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px", textAlign: "center", position: "relative", zIndex: 10 }}>
         <FadeIn inView={inView} delay={0.1} y={60}>
-          <div style={{ width: 88, height: 88, borderRadius: 28, margin: "0 auto 36px", background: "linear-gradient(135deg,#4F46E5,#7C3AED)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 50px rgba(79,70,229,0.3)", animation: "float 4s ease-in-out infinite" }}>
+          <div style={{ width: 88, height: 88, borderRadius: 28, margin: "0 auto 36px", background: "linear-gradient(135deg,#0A4A87,#07D1B2)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 50px rgba(79,70,229,0.3)", animation: "float 4s ease-in-out infinite" }}>
             <svg width="44" height="44" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
           </div>
         </FadeIn>
         <FadeIn inView={inView} delay={0.2} y={60}>
           <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(32px,5vw,56px)", fontWeight: 800, color: "#0F172A", letterSpacing: -2, marginBottom: 24, lineHeight: 1.1 }}>
             Secure Your Organization's<br/>
-            <span style={{ background: "linear-gradient(135deg, #4F46E5, #7C3AED)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Media Today.</span>
+            <span style={{ background: "linear-gradient(135deg, #0A4A87, #07D1B2)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Media Today.</span>
           </h2>
         </FadeIn>
         <FadeIn inView={inView} delay={0.3} y={60}>
           <p style={{ color: "rgba(15,23,42,0.65)", fontSize: 18, lineHeight: 1.7, margin: "0 auto 48px", fontFamily: "'Inter',sans-serif", maxWidth: 560 }}>
             Join leading enterprises using SentinelShield to protect their audiences, their brands, and their infrastructure.
           </p>
-          <button onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#fff", border: "none", borderRadius: 16, padding: "20px 48px", fontSize: 18, fontWeight: 700, cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", boxShadow: hovered ? "0 20px 40px rgba(79,70,229,0.4)" : "0 10px 30px rgba(79,70,229,0.2)", transform: hovered ? "translateY(-4px)" : "none", transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)", letterSpacing: -0.3 }}>
+          <button onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg,#0A4A87,#07D1B2)", color: "#fff", border: "none", borderRadius: 16, padding: "20px 48px", fontSize: 18, fontWeight: 700, cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", boxShadow: hovered ? "0 20px 40px rgba(79,70,229,0.4)" : "0 10px 30px rgba(79,70,229,0.2)", transform: hovered ? "translateY(-4px)" : "none", transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)", letterSpacing: -0.3 }}>
             Start Using the Dashboard →
           </button>
         </FadeIn>

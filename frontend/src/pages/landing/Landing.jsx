@@ -52,10 +52,10 @@ export const Landing = () => {
   }, [isLoading, isTouchDevice]);
 
   const modalConfig = {
-    docs:    { title: "SecureStream AI — Documentation", content: <DocsContent onClose={() => setModal(null)} /> },
+    docs:    { title: "SentinelShield - Documentation", content: <DocsContent onClose={() => setModal(null)} /> },
     privacy: { title: "Privacy Policy", content: <PrivacyContent /> },
     terms:   { title: "Terms of Service", content: <TermsContent onAccept={() => { setTermsAccepted(true); setModal(null); }} /> },
-    support: { title: "SecureStream AI — Support", content: <SupportContent /> },
+    support: { title: "SentinelShield - Support", content: <SupportContent /> },
   };
 
   return (
