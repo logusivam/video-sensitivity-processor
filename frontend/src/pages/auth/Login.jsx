@@ -34,7 +34,7 @@ export const Login = () => {
 
     try {
       await authService.login(formData);
-      navigate('/dashboard'); // Success redirect
+      navigate('/dashboard'); 
     } catch (err) {
       setError(err.response?.data?.message || 'Authentication failed');
     } finally {
@@ -78,7 +78,7 @@ export const Login = () => {
         
         <div className="flex items-center justify-between mt-2 mb-6">
           <label className="flex items-center text-sm text-slate-600 cursor-pointer group">
-            <div className="relative flex items-center justify-center w-4 h-4 mr-2 border rounded border-slate-300 group-hover:border-slate-400 transition-colors">
+            <div className="relative flex items-center justify-center w-4 h-4 mr-2 border rounded border-slate-300 group-hover:border-[#0A4A87] transition-colors">
               <input
                 type="checkbox"
                 name="rememberMe"
@@ -86,14 +86,14 @@ export const Login = () => {
                 checked={formData.rememberMe}
                 onChange={handleInputChange}
               />
-              {formData.rememberMe && <Check size={12} className="text-slate-900" />}
+              {formData.rememberMe && <Check size={12} className="text-[#0A4A87]" />}
             </div>
             Remember me
           </label>
           <button
             type="button"
             onClick={() => navigate('/forgot-password')}
-            className="text-sm font-medium text-slate-900 hover:text-slate-600 transition-colors"
+            className="text-sm font-medium text-[#0A4A87] hover:text-[#07D1B2] transition-colors"
           >
             Forgot password?
           </button>
@@ -108,7 +108,7 @@ export const Login = () => {
         Don't have an account?{' '}
         <button
           type="button"
-          className="font-medium text-slate-900 hover:underline transition-all"
+          className="font-semibold text-[#0A4A87] hover:text-[#07D1B2] transition-all"
           onClick={() => navigate('/register')}
         >
           Create an account
