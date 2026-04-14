@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import modalLogo from "../../assets/images/favicon.png";
 
 export function Particles({ count = 25 }) {
   const particles = useRef(Array.from({ length: count }, (_, i) => ({
@@ -61,9 +62,7 @@ export function Modal({ open, onClose, children, title }) {
       }}>
         <div style={{ padding: "24px 28px 20px", borderBottom: "1px solid rgba(15,23,42,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#0A4A87,#07D1B2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
-            </div>
+            <img src={modalLogo} alt="Icon" style={{ width: 28, height: 28, objectFit: "contain", background: "transparent" }} />
             <span style={{ color: "#0F172A", fontWeight: 700, fontSize: 18, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{title}</span>
           </div>
           <button onClick={onClose} style={{ background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.08)", borderRadius: 8, width: 36, height: 36, cursor: "pointer", color: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
