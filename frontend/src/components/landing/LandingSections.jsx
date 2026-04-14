@@ -546,7 +546,7 @@ export function CTA({ setModal }) {
               onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='8' fill='transparent'/%3E%3Cpath d='M14 6L6 11l8 5 8-5-8-5zM6 17l8 5 8-5M6 14l8 5 8-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"; }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <span style={{ color: "rgba(15,23,42,0.6)", fontSize: 14, fontFamily: "'Inter',sans-serif", fontWeight: 500 }}>© 2026 SentinelShield. All rights reserved.</span>
-              <span style={{ color: "rgba(15,23,42,0.4)", fontSize: 12, fontFamily: "'Inter',sans-serif", letterSpacing: 0.5 }}>A logusivam vision</span>
+              <span style={{ color: "rgba(15,23,42,0.4)", fontSize: 12, fontFamily: "'Inter',sans-serif", letterSpacing: 0.5 }}>logusivam vision</span>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
