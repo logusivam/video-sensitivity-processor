@@ -1,10 +1,48 @@
-@import "tailwindcss";
-@source "../"; /* <-- This tells Tailwind v4 to scan your entire src/ folder! */
+/* 1. Import the global fonts used on your landing page */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
 
-/* Ensuring the base body color matches your enterprise UI */
-body {
-  margin: 0;
-  background-color: #FAFAFA; 
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import "tailwindcss";
+@source "../"; 
+
+
+/* 2. Tailwind v4 Theme Configuration */
+@theme {
+  /* Define your new custom brand colors */
+  --color-brand-blue: #0A4A87;
+  --color-brand-teal: #07D1B2;
+  --color-brand-dark: #05315E;
+  --color-brand-light: #E6F9F6;
+
+  /* THE MAGIC TRICK: 
+     If you already have classes like 'bg-indigo-600' or 'text-purple-500' 
+     scattered all over your Dashboard JSX, you can hijack those default 
+     Tailwind colors right here so they output your new brand colors instead!
+     (This saves you from doing a massive Find & Replace in your codebase).
+  */
+  --color-indigo-500: #0A4A87; /* Forces indigo to act like Deep Blue */
+  --color-indigo-600: #05315E; /* Hover state for indigo */
+  --color-purple-500: #07D1B2; /* Forces purple to act like Bright Teal */
+  --color-purple-600: #05B096; /* Hover state for purple */
+
+  /* Define your custom fonts */
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* 3. Global Base Styles for a seamless transition */
+@layer base {
+  body {
+    margin: 0;
+    /* This #F8FAFC matches the beautiful off-white of your landing page */
+    background-color: #F8FAFC; 
+    color: #0F172A; /* Deep slate text color */
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Automatically apply the bold font to all headings globally */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
 }

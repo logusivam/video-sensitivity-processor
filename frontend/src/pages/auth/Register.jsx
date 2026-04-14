@@ -8,17 +8,14 @@ import { authService } from '../../services/auth.service';
 export const Register = () => {
   const navigate = useNavigate();
   
-  // UI States
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   
-  // Org Validation States
   const [orgError, setOrgError] = useState('');
   const [isOrgValid, setIsOrgValid] = useState(false);
 
-  // Form States
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,14 +26,13 @@ export const Register = () => {
   
   const [errors, setErrors] = useState({});
 
-  // --- Real-time Org Validation ---
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (formData.organization.trim().length >= 3) {
         try {
           const res = await authService.validateOrg(formData.organization);
           if (res.valid) {
-            setOrgError(''); // Clear error if valid
+            setOrgError(''); 
             setIsOrgValid(true);
             setErrors(prev => ({ ...prev, organization: null }));
           }
@@ -49,7 +45,7 @@ export const Register = () => {
         setIsOrgValid(false);
         setOrgError('');
       }
-    }, 600); // 600ms debounce to prevent API spamming
+    }, 600); 
 
     return () => clearTimeout(timer);
   }, [formData.organization]);
@@ -85,11 +81,9 @@ export const Register = () => {
     setSuccessMessage('');
     
     if (!validateForm()) return;
-
     setIsLoading(true);
 
     try {
-      // Mapping local fields to backend expectations
       const payload = {
         fullName: formData.name,
         email: formData.email,
@@ -115,9 +109,9 @@ export const Register = () => {
   return (
     <>
       {successMessage && (
-        <div className="mb-6 p-4 rounded-md bg-green-50 border border-green-200 flex items-start">
-          <Check size={16} className="text-green-600 mt-0.5 mr-2 flex-shrink-0" />
-          <p className="text-sm text-green-700 font-medium">{successMessage}</p>
+        <div className="mb-6 p-4 rounded-md bg-[#E6F9F6] border border-[#07D1B2] flex items-start">
+          <Check size={16} className="text-[#05B096] mt-0.5 mr-2 flex-shrink-0" />
+          <p className="text-sm text-[#05B096] font-medium">{successMessage}</p>
         </div>
       )}
 
@@ -129,35 +123,15 @@ export const Register = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputField
-            label="Full Name" name="name" type="text" icon={User}
-            placeholder="Jane Doe" value={formData.name} onChange={handleInputChange} error={errors.name}
-          />
-          <InputField
-            label="Email Address" name="email" type="email" icon={Mail}
-            placeholder="jane@company.com" value={formData.email} onChange={handleInputChange} error={errors.email}
-          />
+          <InputField label="Full Name" name="name" type="text" icon={User} placeholder="Jane Doe" value={formData.name} onChange={handleInputChange} error={errors.name} />
+          <InputField label="Email Address" name="email" type="email" icon={Mail} placeholder="jane@company.com" value={formData.email} onChange={handleInputChange} error={errors.email} />
         </div>
 
-        <InputField
-          label="Organization / Tenant" name="organization" type="text" icon={Building}
-          placeholder="Acme Corp" value={formData.organization} onChange={handleInputChange} 
-          error={errors.organization || orgError}
-        />
+        <InputField label="Organization / Tenant" name="organization" type="text" icon={Building} placeholder="Acme Corp" value={formData.organization} onChange={handleInputChange} error={errors.organization || orgError} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputField
-            label="Password" name="password" type="password" icon={Lock}
-            placeholder="••••••••" isPassword={true} showPassword={showPassword}
-            togglePassword={() => setShowPassword(!showPassword)}
-            value={formData.password} onChange={handleInputChange} error={errors.password}
-          />
-          <InputField
-            label="Confirm Password" name="confirmPassword" type="password" icon={Lock}
-            placeholder="••••••••" isPassword={true} showPassword={showConfirmPassword}
-            togglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
-            value={formData.confirmPassword} onChange={handleInputChange} error={errors.confirmPassword}
-          />
+          <InputField label="Password" name="password" type="password" icon={Lock} placeholder="••••••••" isPassword={true} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} value={formData.password} onChange={handleInputChange} error={errors.password} />
+          <InputField label="Confirm Password" name="confirmPassword" type="password" icon={Lock} placeholder="••••••••" isPassword={true} showPassword={showConfirmPassword} togglePassword={() => setShowConfirmPassword(!showConfirmPassword)} value={formData.confirmPassword} onChange={handleInputChange} error={errors.confirmPassword} />
         </div>
 
         <div className="pt-2">
@@ -168,7 +142,7 @@ export const Register = () => {
 
         <div className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-slate-900 hover:underline transition-all">
+          <Link to="/login" className="font-semibold text-[#0A4A87] hover:text-[#07D1B2] transition-all">
             Log in
           </Link>
         </div>
