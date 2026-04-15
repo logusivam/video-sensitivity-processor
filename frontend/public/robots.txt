@@ -8,4 +8,4 @@ Disallow: /api/
 Disallow: /dashboard/
 
 # Point crawlers directly to your sitemap
-Sitemap: https://video-sensitivity-processor.vercel.app/sitemap.xml
+Sitemap: https://sentinelshield-ai.vercel.app/sitemap.xml
