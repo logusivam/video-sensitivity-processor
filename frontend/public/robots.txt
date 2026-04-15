@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+
+# Disallow indexing of internal or API routes if you eventually proxy them
+Disallow: /api/
+Disallow: /dashboard/
+
+# Point crawlers directly to your sitemap
+Sitemap: https://video-sensitivity-processor.vercel.app/sitemap.xml
